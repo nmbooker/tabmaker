@@ -40,7 +40,7 @@ joinNotesOnString str = intercalate "-" str
 
 padR :: a -> Int -> [a] -> [a]
 padR padItem len xs =
-    xs ++ (take padLen $ repeat padItem)
+    xs ++ (replicate padLen padItem)
     where padLen = max 0 (len - (length xs))
 
 padRMax :: a -> [[a]] -> [[a]]
