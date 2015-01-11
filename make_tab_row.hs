@@ -32,6 +32,7 @@ splitNoteLine = words
 typesetString :: [String] -> String
 typesetString stringSpec = "|-" ++ (joinNotesOnString stringSpec) ++ "-|"
 
+joinNotesOnString :: [String] -> String
 joinNotesOnString str = intercalate "-" str
 
 padR :: a -> Int -> [a] -> [a]
