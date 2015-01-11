@@ -24,7 +24,7 @@ makeTabRow :: String -> String
 makeTabRow = unlines . linesToTabRow . lines
 
 linesToTabRow :: [String] -> [String]
-linesToTabRow = (map typesetString) . transpose . (map splitNoteLine)
+linesToTabRow = (map typesetString) . transpose . (map (padRMax '-' . splitNoteLine))
 
 splitNoteLine :: String -> [String]
 splitNoteLine = words
@@ -32,8 +32,16 @@ splitNoteLine = words
 typesetString :: [String] -> String
 typesetString stringSpec = "|-" ++ (joinNotesOnString stringSpec) ++ "-|"
 
-joinNotesOnString str = intercalate "-" (map pad2chars str)
+joinNotesOnString str = intercalate "-" str
 
-pad2chars :: String -> String
-pad2chars [a,b] = [a,b]
-pad2chars [a] = [a, '-']
+padR :: a -> Int -> [a] -> [a]
+padR padItem len xs =
+    xs ++ (take padLen $ repeat padItem)
+    where padLen = max 0 (len - (length xs))
+
+padRMax :: a -> [[a]] -> [[a]]
+padRMax padItem ls =
+    map (padR padItem (maxLen ls)) ls
+
+maxLen :: [[a]] -> Int
+maxLen = maximum . (map length)
