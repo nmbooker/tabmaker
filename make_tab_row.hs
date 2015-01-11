@@ -35,6 +35,9 @@ typesetString stringSpec = "|-" ++ (joinNotesOnString stringSpec) ++ "-|"
 joinNotesOnString :: [String] -> String
 joinNotesOnString str = intercalate "-" str
 
+-- Note the following pad* functions are generic and so worthy of
+-- extracting into a module (or replacing with existing module functions)
+
 padR :: a -> Int -> [a] -> [a]
 padR padItem len xs =
     xs ++ (take padLen $ repeat padItem)
