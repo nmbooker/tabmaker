@@ -1,0 +1,84 @@
+#! /usr/bin/env python
+
+"""Paginate Tab ASCII
+
+cat sample_tab.txt \
+    | ./paginate_tab.py -r 70 \
+    | iconv -c -f utf8 -t latin1 - \
+    | enscript -fCourier9  -otest.ps
+
+"""
+
+import sys
+import argparse
+from rslatch import RSLatch
+
+class TabLatch(RSLatch):
+    def up_trigger(self, line):
+        lstr = line.lstrip()
+        return lstr.startswith('|') or lstr.startswith('-')
+
+    def down_trigger(self, line):
+        return not self.up_trigger(line)
+
+class TabLoggingLatch(TabLatch):
+    def rising_edge(self, item):
+        sys.stderr.write('RISING EDGE: %s' % item)
+    def falling_edge(self, item):
+        sys.stderr.write('FALLING EDGE: %s' % item)
+
+class TabPaginatingLatch(TabLatch):
+    def __init__(self, *args, **kwargs):
+        super(TabPaginatingLatch, self).__init__(*args, **kwargs)
+        self.tab_row = None
+        self.page_line = 0
+        
+    def rising_edge(self, item):
+        self.tab_row = []
+        
+    def falling_edge(self, item):
+        sys.stdout.writelines(self.tab_row)
+        self.tab_row = None
+
+    def feed(self, item):
+        super(TabPaginatingLatch, self).feed(item)
+        self.page_line += 1
+        if self.tab_row is not None:
+            self.tab_row.append(item)
+
+class ByRef(object):
+    def __init__(self, value):
+        self._value = value
+
+    def set_(self, value):
+        self._value = value
+
+    def get(self):
+        return self._value
+
+    value = property(set_, get)
+
+def main(options):
+    """Main program."""
+    tablatch = TabPaginatingLatch()
+    rows = options.rows
+    for line in sys.stdin:
+        tablatch.feed(line)
+        if tablatch.page_line > rows:
+            sys.stdout.write('\f')
+            tablatch.page_line = 0
+        if tablatch.is_off():
+            sys.stdout.write(line)
+    return
+
+def get_options():
+    """Get options for the script."""
+    parser = argparse.ArgumentParser(
+        description="Paginate Tab ASCII",
+    )
+    parser.add_argument('--rows', '-r', required=True, type=int, help='Number of rows')
+    options = parser.parse_args()
+    return options
+
+if __name__ == "__main__":
+    main(get_options())
